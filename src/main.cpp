@@ -7,6 +7,10 @@
 #include <WiFi.h>
 #include <HTTPClient.h>
 #include "wifi_credentials.h"
+#include <map>
+
+#define SCREEN_WIDTH 250
+#define SCREEN_HEIGHT 122
 
 // Display pins
 static const uint8_t EPD_BUSY = 15;
@@ -14,16 +18,16 @@ static const uint8_t EPD_CS = 5;
 static const uint8_t EPD_RST = 2;
 static const uint8_t EPD_DC = 19;
 
+const int TOP_BAR_HEIGHT = 12;
+
 // Creating display object
 GxEPD2_BW<GxEPD2_213_BN, GxEPD2_213_BN::HEIGHT> display(GxEPD2_213_BN(EPD_CS, EPD_DC, EPD_RST, EPD_BUSY));
 
 bool status = true;
 String screenName = "STARTING";
-
-#define SCREEN_WIDTH 250
-#define SCREEN_HEIGHT 122
-
-const int TOP_BAR_HEIGHT = 12;
+const std::map<String, String> API = {
+    {"HOME_DATA", "http://"},
+    {"test", "http://"}};
 
 enum alignmentType
 {
@@ -109,15 +113,11 @@ void drawTopBar()
   drawString(SCREEN_WIDTH / 2, 0, screenName, CENTER, true);
 }
 
-void drawTestPage()
+bool sendRequest(String url, JsonDocument &doc)
 {
-  display.setCursor(20, 20);
-  display.print("test");
-}
+  if (url == "")
+    return false;
 
-void sendRequest(String url, JsonDocument &doc)
-{
-  if (url == "") return;
   HTTPClient http;
   String payload;
   http.begin(url);
@@ -126,24 +126,44 @@ void sendRequest(String url, JsonDocument &doc)
   {
     payload = http.getString();
     Serial.println(payload);
-    status = true;
   }
   else
   {
     Serial.println("Error on HTTP request, status code: " + String(httpCode));
-    status = false;
     http.end();
-    return;
+    return false;
   }
 
   DeserializationError error = deserializeJson(doc, payload);
-  if (error) {
+  if (error || doc.isNull())
+  {
     Serial.println("JSON parsing failed!");
-    status = false;
-  }else{
+    return false;
+  }
+  else
+  {
     Serial.println("JSON parsing successfull!");
   }
-  http.end();  
+  http.end();
+  return true;
+}
+
+void drawHomePage()
+{
+  JsonDocument doc;
+  bool isSuccessfull = sendRequest(API.at("HOME_DATA"), doc);
+  status = isSuccessfull;
+
+  if (isSuccessfull)
+  {
+    // draw data
+  }
+  
+}
+void drawTestPage()
+{
+  display.setCursor(20, 20);
+  display.print("test");
 }
 
 void setup()
@@ -175,15 +195,16 @@ void setup()
 void loop()
 {
   // choose witch screen to show, currently for debug purposes
-  int screen = -1;
+  int screen = 1;
   switch (screen)
   {
-  case 0:
+  case 1:
+    screenName = "HOME";
+    drawScreen(drawTestPage, drawTopBar);
     break;
   default:
     screenName = "TEST";
     drawScreen(drawTestPage, drawTopBar);
-    delay(20000);
     break;
   }
 }
