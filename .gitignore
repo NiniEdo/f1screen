@@ -1,0 +1,6 @@
+src/main/wifi_credentials.h
+.pio/*
+.vscode/*
+lib/*
+include/*
+test/*
