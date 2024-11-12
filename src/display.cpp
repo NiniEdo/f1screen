@@ -22,8 +22,8 @@ const std::map<screenNameKeys, String> screenNameMap = {
     {screenNameKeys::STARTING, "STARTING"},
 };
 
-const std::map<screenNameKeys, String> API = {
-    {screenNameKeys::HOME, "http://"},
+const std::map<String, String> API = {
+    {"DriverStanding", "http://ergast.com/api/f1/current/driverStandings.json"},
 };
 
 String screenName = screenNameMap.at(screenNameKeys::STARTING);
@@ -36,6 +36,31 @@ void initDisplay()
   display.setTextColor(GxEPD_BLACK);
   status = false;
   drawScreen(drawTopBar, nullptr);
+}
+
+void drawTable(int x, int y, int rows, int cols, int cellWidth[], int cellHeight)
+{
+  // horizontal lines
+  for (int i = 0; i <= rows; i++)
+  {
+    int totalWidth = 0;
+    for (int j = 0; j < cols; j++)
+    {
+      totalWidth += cellWidth[j];
+    }
+    display.drawLine(x, y + i * cellHeight, x + totalWidth, y + i * cellHeight, GxEPD_BLACK);
+  }
+
+  // vertical lines
+  for (int j = 0; j <= cols; j++)
+  {
+    int currentX = x;
+    for (int k = 0; k < j; k++)
+    {
+      currentX += cellWidth[k];
+    }
+    display.drawLine(currentX, y, currentX, y + rows * cellHeight, GxEPD_BLACK);
+  }
 }
 
 void drawScreen(void (*drawPage)(), void (*drawTopBar)())
@@ -121,13 +146,38 @@ void drawTopBar()
 
 void drawHomePage()
 {
-  JsonDocument doc; // Inizializza con una dimensione appropriata
-  bool isSuccessfull = sendRequest(API.at(screenNameKeys::HOME), doc);
+  JsonDocument driverStandingDoc;
+  bool isSuccessfull = sendRequest(API.at("DriverStanding"), driverStandingDoc);
   status = isSuccessfull;
 
   if (isSuccessfull)
   {
-    // draw data
+    driverStandingDoc["MRData"]["StandingsTable"]["StandingsLists"][0]["DriverStandings"][0]["Driver"]["givenName"];
+    JsonArray driverStandings = driverStandingDoc["MRData"]["StandingsTable"]["StandingsLists"][0]["DriverStandings"].as<JsonArray>();
+    int yPosition = 35;
+    int cellWidth[] = {14, 40, 35};
+    int xPosition = 2;
+    drawTable(xPosition-2, yPosition-5, 5, 3, cellWidth, 15);
+    for (int i = 0; i < 5; i++)
+    {
+      int16_t x1, y1;
+      uint16_t w, h;
+      uint16_t offset = 3;
+      uint16_t xRelativePosition = xPosition;
+      JsonObject driver = driverStandings[i];
+      
+      String name = driver["Driver"]["code"].as<String>();
+      String points = driver["points"].as<String>();
+
+      drawString(xRelativePosition, yPosition, String(i + 1), LEFT, false);
+      xRelativePosition += cellWidth[0];
+
+      drawString(xRelativePosition+offset, yPosition, name, LEFT, false);
+      xRelativePosition += cellWidth[1];
+
+      drawString(xRelativePosition+offset, yPosition, points, LEFT, false);
+      yPosition += 15;
+    }
   }
 }
 

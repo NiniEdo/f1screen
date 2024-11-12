@@ -19,6 +19,7 @@ void loop()
   case 1:
     setScreenName(screenNameKeys::HOME);
     drawScreen(drawHomePage, drawTopBar);
+    delay(20000);
     break;
   default:
     setScreenName("TEST");
