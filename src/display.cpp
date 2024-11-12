@@ -15,7 +15,6 @@ const int TOP_BAR_HEIGHT = 12;
 
 GxEPD2_BW<GxEPD2_213_BN, GxEPD2_213_BN::HEIGHT> display(GxEPD2_213_BN(EPD_CS, EPD_DC, EPD_RST, EPD_BUSY));
 
-bool status = true;
 
 const std::map<screenNameKeys, String> screenNameMap = {
     {screenNameKeys::HOME, "HOME"},
@@ -24,6 +23,7 @@ const std::map<screenNameKeys, String> screenNameMap = {
 
 const std::map<String, String> API = {
     {"DriverStanding", "http://ergast.com/api/f1/current/driverStandings.json"},
+    {"TeamsStanding", "http://ergast.com/api/f1/current/constructorStandings.json"},
 };
 
 String screenName = screenNameMap.at(screenNameKeys::STARTING);
@@ -147,35 +147,58 @@ void drawTopBar()
 void drawHomePage()
 {
   JsonDocument driverStandingDoc;
-  bool isSuccessfull = sendRequest(API.at("DriverStanding"), driverStandingDoc);
-  status = isSuccessfull;
+  bool driverRequestIsSuccessfull = sendRequest(API.at("DriverStanding"), driverStandingDoc);
+  JsonDocument teamsStandingDoc;
+  bool teamsRequestIsSuccessfull = sendRequest(API.at("TeamsStanding"), teamsStandingDoc);
 
-  if (isSuccessfull)
+  status = driverRequestIsSuccessfull && teamsRequestIsSuccessfull;
+
+  if (status)
   {
-    driverStandingDoc["MRData"]["StandingsTable"]["StandingsLists"][0]["DriverStandings"][0]["Driver"]["givenName"];
     JsonArray driverStandings = driverStandingDoc["MRData"]["StandingsTable"]["StandingsLists"][0]["DriverStandings"].as<JsonArray>();
-    int yPosition = 35;
-    int cellWidth[] = {14, 40, 35};
-    int xPosition = 2;
-    drawTable(xPosition-2, yPosition-5, 5, 3, cellWidth, 15);
+    int yPosition = 50;
+    int CellWidth[] = {14, 40, 35};
+    uint16_t startPoint = 16;
+    int xPosition = startPoint;
+    drawTable(xPosition - 2, yPosition - 5, 5, 3, CellWidth, 15);
     for (int i = 0; i < 5; i++)
     {
-      int16_t x1, y1;
-      uint16_t w, h;
       uint16_t offset = 3;
       uint16_t xRelativePosition = xPosition;
       JsonObject driver = driverStandings[i];
-      
+
       String name = driver["Driver"]["code"].as<String>();
       String points = driver["points"].as<String>();
 
       drawString(xRelativePosition, yPosition, String(i + 1), LEFT, false);
-      xRelativePosition += cellWidth[0];
+      xRelativePosition += CellWidth[0];
 
-      drawString(xRelativePosition+offset, yPosition, name, LEFT, false);
-      xRelativePosition += cellWidth[1];
+      drawString(xRelativePosition + offset, yPosition, name, LEFT, false);
+      xRelativePosition += CellWidth[1];
 
-      drawString(xRelativePosition+offset, yPosition, points, LEFT, false);
+      drawString(xRelativePosition + offset, yPosition, points, LEFT, false);
+      yPosition += 15;
+    }
+
+    JsonArray teamsStandings = teamsStandingDoc["MRData"]["StandingsTable"]["StandingsLists"][0]["ConstructorStandings"].as<JsonArray>();
+    xPosition = CellWidth[0] + CellWidth[1] + CellWidth[2] + startPoint;
+    yPosition = 50;
+    CellWidth[0] = 95;
+    CellWidth[1] = 35;
+    drawTable(xPosition - 2, yPosition - 5, 5, 2, CellWidth, 15);
+    for (int i = 0; i < 5; i++)
+    {
+      uint16_t offset = 3;
+      uint16_t xRelativePosition = xPosition;
+      JsonObject driver = teamsStandings[i];
+
+      String name = driver["Constructor"]["name"].as<String>();
+      String points = driver["points"].as<String>();
+
+      drawString(xRelativePosition + offset, yPosition, name, LEFT, false);
+      xRelativePosition += CellWidth[0];
+
+      drawString(xRelativePosition + offset, yPosition, points, LEFT, false);
       yPosition += 15;
     }
   }

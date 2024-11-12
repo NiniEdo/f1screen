@@ -14,7 +14,6 @@ bool sendRequest(const String& url, JsonDocument &doc)
   if (httpCode > 0 && httpCode == HTTP_CODE_OK)
   {
     payload = http.getString();
-    Serial.println(payload);
   }
   else
   {

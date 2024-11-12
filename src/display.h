@@ -7,6 +7,8 @@
 #include <Adafruit_GFX.h>
 #include <map>
 
+bool status = true;
+
 enum alignmentType
 {
   LEFT,

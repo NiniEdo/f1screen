@@ -8,6 +8,7 @@ void setup()
   Serial.begin(115200);
   initDisplay();
   connectToWiFi(ssid, password);
+  status = true;
 }
 
 void loop()
