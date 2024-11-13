@@ -2,6 +2,7 @@
 #include "display.h"
 #include "network.h"
 #include "wifi_credentials.h"
+#include <TimeLib.h>
 
 void setup()
 {
@@ -23,7 +24,7 @@ void loop()
     delay(20000);
     break;
   default:
-    setScreenName("TEST");
+    setScreenName(screenNameKeys::TEST);
     drawScreen(drawTestPage, drawTopBar);
     break;
   }

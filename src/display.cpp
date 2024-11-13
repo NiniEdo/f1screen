@@ -2,6 +2,8 @@
 #include "../fonts/Formula1_Bold5pt7b.h"
 #include <ArduinoJson.h>
 #include "network.h"
+#include "utils.h"
+#include <TimeLib.h>
 
 #define SCREEN_WIDTH 250
 #define SCREEN_HEIGHT 122
@@ -11,19 +13,21 @@ static const uint8_t EPD_CS = 5;
 static const uint8_t EPD_RST = 2;
 static const uint8_t EPD_DC = 19;
 
+bool status = true;
+
 const int TOP_BAR_HEIGHT = 12;
 
 GxEPD2_BW<GxEPD2_213_BN, GxEPD2_213_BN::HEIGHT> display(GxEPD2_213_BN(EPD_CS, EPD_DC, EPD_RST, EPD_BUSY));
 
-
 const std::map<screenNameKeys, String> screenNameMap = {
     {screenNameKeys::HOME, "HOME"},
     {screenNameKeys::STARTING, "STARTING"},
-};
+    {screenNameKeys::TEST, "TEST"}};
 
 const std::map<String, String> API = {
     {"DriverStanding", "http://ergast.com/api/f1/current/driverStandings.json"},
     {"TeamsStanding", "http://ergast.com/api/f1/current/constructorStandings.json"},
+    {"Calendar", "http://ergast.com/api/f1/current.json"},
 };
 
 String screenName = screenNameMap.at(screenNameKeys::STARTING);
@@ -150,11 +154,14 @@ void drawHomePage()
   bool driverRequestIsSuccessfull = sendRequest(API.at("DriverStanding"), driverStandingDoc);
   JsonDocument teamsStandingDoc;
   bool teamsRequestIsSuccessfull = sendRequest(API.at("TeamsStanding"), teamsStandingDoc);
+  JsonDocument calendarDoc;
+  bool calendarIsSuccessfull = sendRequest(API.at("Calendar"), calendarDoc);
 
-  status = driverRequestIsSuccessfull && teamsRequestIsSuccessfull;
+  status = driverRequestIsSuccessfull && teamsRequestIsSuccessfull && calendarIsSuccessfull;
 
   if (status)
   {
+    // print driver standings
     JsonArray driverStandings = driverStandingDoc["MRData"]["StandingsTable"]["StandingsLists"][0]["DriverStandings"].as<JsonArray>();
     int yPosition = 50;
     int CellWidth[] = {14, 40, 35};
@@ -180,6 +187,7 @@ void drawHomePage()
       yPosition += 15;
     }
 
+    // print team standings
     JsonArray teamsStandings = teamsStandingDoc["MRData"]["StandingsTable"]["StandingsLists"][0]["ConstructorStandings"].as<JsonArray>();
     xPosition = CellWidth[0] + CellWidth[1] + CellWidth[2] + startPoint;
     yPosition = 50;
@@ -193,6 +201,7 @@ void drawHomePage()
       JsonObject driver = teamsStandings[i];
 
       String name = driver["Constructor"]["name"].as<String>();
+      name.replace("F1 Team", "");
       String points = driver["points"].as<String>();
 
       drawString(xRelativePosition + offset, yPosition, name, LEFT, false);
@@ -201,6 +210,19 @@ void drawHomePage()
       drawString(xRelativePosition + offset, yPosition, points, LEFT, false);
       yPosition += 15;
     }
+
+    // print future races
+    JsonArray races = calendarDoc["MRData"]["RaceTable"]["Races"].as<JsonArray>();
+    uint16_t index = findUpcomingDateIndex(races);
+    String print = "";
+    for (int i = index; i <= index + 1; i++)
+    {
+      String nextRaces = String(races[i]["date"].as<const char *>());
+      String month = nextRaces.substring(5, 2);
+      String day = nextRaces.substring(9, 2);
+      print += day + "/" + month + " " + String(races[i]["Circuit"]["Location"]["country"].as<const char *>());
+    }
+    drawString(SCREEN_WIDTH / 2, 19, print, CENTER, false);
   }
 }
 

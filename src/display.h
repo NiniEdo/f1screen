@@ -7,7 +7,7 @@
 #include <Adafruit_GFX.h>
 #include <map>
 
-bool status = true;
+extern bool status;
 
 enum alignmentType
 {
@@ -20,6 +20,7 @@ enum class screenNameKeys
 {
   HOME,
   STARTING,
+  TEST
 };
 
 void initDisplay();
