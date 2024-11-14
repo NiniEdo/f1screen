@@ -17,10 +17,7 @@ An Arduino compatible device (e.g. ESP32)
 An e-paper compatible display (for example, GxEPD2_213_BN)
 
 ## Installation:
-Clone this repository
-Install dependencies
-Configure WiFi credentials in the wifi_credentials.h file:
-Upload the project to your device
+Clone this repository, install dependencies, configure WiFi credentials in the wifi_credentials.h file, upload the project to your device
 
 ## Usage
 Turn on the device.
