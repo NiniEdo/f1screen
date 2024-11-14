@@ -1,6 +1,6 @@
 # F1 Screen
 ## Description
-F1 Screen is an Arduino-based project that displays Formula 1 race information on an e-paper display. Use the Ergast API to get up-to-date data on races, practice sessions, qualifying and the races themselves.
+F1 Screen is an Arduino-based project that displays Formula 1 race information on an e-paper display. Use the Ergast API to get up-to-date data on races, practice sessions, qualifying and the races themselves. Inspired by SurvivalHacking
 
 ## Characteristics
 Viewing information on Formula 1 races
