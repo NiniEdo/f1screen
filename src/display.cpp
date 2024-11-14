@@ -22,7 +22,8 @@ GxEPD2_BW<GxEPD2_213_BN, GxEPD2_213_BN::HEIGHT> display(GxEPD2_213_BN(EPD_CS, EP
 const std::map<screenNameKeys, String> screenNameMap = {
     {screenNameKeys::HOME, "HOME"},
     {screenNameKeys::STARTING, "STARTING"},
-    {screenNameKeys::TEST, "TEST"}};
+    {screenNameKeys::TEST, "TEST"},
+    {screenNameKeys::RACEWEEK, "RACE WEEK"}};
 
 const std::map<String, String> API = {
     {"DriverStanding", "http://ergast.com/api/f1/current/driverStandings.json"},
@@ -151,13 +152,13 @@ void drawTopBar()
 void drawHomePage()
 {
   JsonDocument driverStandingDoc;
-  bool driverRequestIsSuccessfull = sendRequest(API.at("DriverStanding"), driverStandingDoc);
+  bool driverRequestIsSuccessful = sendRequest(API.at("DriverStanding"), driverStandingDoc);
   JsonDocument teamsStandingDoc;
-  bool teamsRequestIsSuccessfull = sendRequest(API.at("TeamsStanding"), teamsStandingDoc);
+  bool teamsRequestIsSuccessful = sendRequest(API.at("TeamsStanding"), teamsStandingDoc);
   JsonDocument calendarDoc;
-  bool calendarIsSuccessfull = sendRequest(API.at("Calendar"), calendarDoc);
+  bool calendarIsSuccessful = sendRequest(API.at("Calendar"), calendarDoc);
 
-  status = driverRequestIsSuccessfull && teamsRequestIsSuccessfull && calendarIsSuccessfull;
+  status = driverRequestIsSuccessful && teamsRequestIsSuccessful && calendarIsSuccessful;
 
   if (status)
   {
@@ -214,16 +215,93 @@ void drawHomePage()
     // print future races
     JsonArray races = calendarDoc["MRData"]["RaceTable"]["Races"].as<JsonArray>();
     uint16_t index = findUpcomingDateIndex(races);
-    String print = "";
-    for (int i = index; i <= index + 1; i++)
+    String raceDetails[2];
+    uint8_t ystart = 16;
+    for (int i = 0; i < 2; i++)
     {
-      String nextRaces = String(races[i]["date"].as<const char *>());
-      String month = nextRaces.substring(5, 2);
-      String day = nextRaces.substring(9, 2);
-      print += day + "/" + month + " " + String(races[i]["Circuit"]["Location"]["country"].as<const char *>());
+      uint8_t raceNumber = index + i;
+      if (raceNumber < races.size())
+      {
+        String nextRaces = String(races[raceNumber]["date"].as<const char *>());
+        struct tm date = StringToDate(nextRaces.c_str());
+        String month = String(date.tm_mon);
+        String day = String(date.tm_mday);
+        raceDetails[i] += day + "/" + month + " " +
+                          String(races[raceNumber]["Circuit"]["Location"]["locality"].as<const char *>()) + " (" +
+                          String(races[raceNumber]["Circuit"]["Location"]["country"].as<const char *>()) + ")";
+
+        drawString(SCREEN_WIDTH / 2, ystart, raceDetails[i], CENTER, false);
+        ystart += 13;
+      }
     }
-    drawString(SCREEN_WIDTH / 2, 19, print, CENTER, false);
   }
+}
+
+void drawRaceWeekPage()
+{
+  JsonDocument calendarDoc;
+  bool calendarIsSuccessful = sendRequest(API.at("Calendar"), calendarDoc);
+  status = calendarIsSuccessful;
+
+  JsonArray races = calendarDoc["MRData"]["RaceTable"]["Races"].as<JsonArray>();
+  uint16_t index = findUpcomingDateIndex(races);
+  if (index < races.size())
+  {
+    const std::map<String, String> sessionsNameMap = {
+        {"FirstPractice", "FP1"},
+        {"ThirdPractice", "FP3"},
+        {"SecondPractice", "FP2"},
+        {"Qualifying", "QUALI"},
+        {"Race", "RACE"},
+        {"Sprint", "PRINT"}};
+
+    JsonObject race = races[index];
+
+    int yPosition = 40;
+    int xPosition = 5;
+
+    for (JsonPair kv : race)
+    {
+      const char *key = kv.key().c_str();
+
+      if (strcmp(key, "season") == 0 ||
+          strcmp(key, "round") == 0 ||
+          strcmp(key, "url") == 0 ||
+          strcmp(key, "raceName") == 0 ||
+          strcmp(key, "Circuit") == 0 ||
+          strcmp(key, "date") == 0 ||
+          strcmp(key, "time") == 0)
+      {
+        continue;
+      }
+      if (race[key].is<JsonObject>())
+      {
+        JsonObject session = race[key].as<JsonObject>();
+        printSession(session, sessionsNameMap, key, xPosition, yPosition);
+      }
+    }
+    JsonObject session = races[index].as<JsonObject>();
+    printSession(session, sessionsNameMap, "RACE", xPosition, yPosition);
+  }
+}
+
+void printSession(JsonObject &session, const std::map<String, String> &sessionsNameMap, const char *key, int xPosition, int &yPosition)
+{
+  const char *dateStr = session["date"];
+  const char *timeStr = session["time"];
+
+  tm date = StringToDate(dateStr);
+  tm time = StringToTime(timeStr);
+  String day = getDayOfWeek(date);
+  tm localtime = LocalTime(time, date);
+
+  String sessionName = sessionsNameMap.count(String(key)) ? sessionsNameMap.at(String(key)) : String(key);
+  String sessionInfo = day + " " + String(localtime.tm_hour) + " " + (localtime.tm_min < 10 ? "0" : "") + String(localtime.tm_min);
+
+  drawString(xPosition, yPosition, sessionName, LEFT, false);
+  drawString(xPosition + 50, yPosition, sessionInfo, LEFT, false);
+
+  yPosition += 10;
 }
 
 void drawTestPage()

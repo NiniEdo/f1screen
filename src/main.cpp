@@ -15,12 +15,17 @@ void setup()
 void loop()
 {
   // choose which screen to show, currently for debug purposes
-  int screen = 1;
+  int screen = 2;
   switch (screen)
   {
   case 1:
     setScreenName(screenNameKeys::HOME);
     drawScreen(drawHomePage, drawTopBar);
+    delay(20000);
+    break;
+  case 2:
+    setScreenName(screenNameKeys::RACEWEEK);
+    drawScreen(drawRaceWeekPage, drawTopBar);
     delay(20000);
     break;
   default:
