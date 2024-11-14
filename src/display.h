@@ -27,15 +27,18 @@ enum class screenNameKeys
 
 void initDisplay();
 void drawScreen(void (*drawPage)() = nullptr, void (*drawTopBar)() = nullptr);
+void clearPage();
 void drawString(int x, int y, String text, alignmentType alignment, bool wrap);
 void drawStatus(int16_t x, int16_t y);
 void drawBattery(int x, int y);
 void drawTopBar();
 void drawHomePage();
 void drawRaceWeekPage();
-void drawTestPage();
-void printSession(JsonObject &session, const std::map<String, String> &sessionsNameMap, const char *key, int xPosition, int &yPosition);
+void printSessionInfo(JsonObject &session, const std::map<String, String> &sessionsNameMap, const char *key, int xPosition, int &yPosition);
+void drawSessionInfo(JsonArray &races, uint16_t index);
 void setScreenName(screenNameKeys key);
-void setScreenName(const String& name);
+void setScreenName(const String &name);
+void drawTestPage();
+void clearPage();
 
 #endif // DISPLAY_H

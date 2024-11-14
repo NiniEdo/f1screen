@@ -2,7 +2,7 @@
 #include <WiFi.h>
 #include <HTTPClient.h>
 
-bool sendRequest(const String& url, JsonDocument &doc)
+bool sendRequest(const String &url, JsonDocument &doc)
 {
   if (url.isEmpty())
     return false;
@@ -37,18 +37,32 @@ bool sendRequest(const String& url, JsonDocument &doc)
   return true;
 }
 
-void connectToWiFi(const char* ssid, const char* password)
+bool connectToWiFi(const char *ssid, const char *password)
 {
   WiFi.setAutoReconnect(true);
   WiFi.begin(ssid, password);
   Serial.print("Connecting to WiFi...");
-  while (WiFi.status() != WL_CONNECTED)
+  unsigned long startAttemptTime = millis();
+
+  while (WiFi.status() != WL_CONNECTED && millis() - startAttemptTime < 10000)
   {
     delay(500);
     Serial.print(WiFi.status());
     Serial.print(" ");
   }
 
-  Serial.println("\nConnected to WiFi");
-  Serial.print("IP address: " + WiFi.localIP());
+  if (WiFi.status() == WL_CONNECTED)
+  {
+    IPAddress dns(8, 8, 8, 8);
+    WiFi.config(WiFi.localIP(), WiFi.gatewayIP(), WiFi.subnetMask(), dns);
+
+    Serial.println("\nConnected to WiFi");
+    Serial.println(WiFi.localIP());
+    return true;
+  }
+  else
+  {
+    Serial.println("\nFailed to connect to WiFi");
+    return false;
+  }
 }

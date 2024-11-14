@@ -1,9 +1,11 @@
+#include <ArduinoJson.h>
+#include <TimeLib.h>
+#include <cctype>
+#include <GxEPD2_BW.h>
 #include "display.h"
 #include "../fonts/Formula1_Bold5pt7b.h"
-#include <ArduinoJson.h>
 #include "network.h"
 #include "utils.h"
-#include <TimeLib.h>
 
 #define SCREEN_WIDTH 250
 #define SCREEN_HEIGHT 122
@@ -78,15 +80,15 @@ void drawScreen(void (*drawPage)(), void (*drawTopBar)())
   }
   do
   {
+    if (drawPage != nullptr)
+    {
+      display.drawRect(0, TOP_BAR_HEIGHT + 1, SCREEN_WIDTH, SCREEN_HEIGHT - TOP_BAR_HEIGHT, GxEPD_WHITE); // clears the page
+      drawPage();
+    }
     if (drawTopBar != nullptr)
     {
       display.drawRect(0, 0, SCREEN_WIDTH, TOP_BAR_HEIGHT, GxEPD_WHITE); // clears the top bar
       drawTopBar();
-    }
-    if (drawPage != nullptr)
-    {
-      display.drawRect(0, TOP_BAR_HEIGHT + 1, SCREEN_WIDTH, SCREEN_HEIGHT, GxEPD_WHITE); // clears the page
-      drawPage();
     }
   } while (display.nextPage());
 }
@@ -160,91 +162,108 @@ void drawHomePage()
 
   status = driverRequestIsSuccessful && teamsRequestIsSuccessful && calendarIsSuccessful;
 
-  if (status)
+  if (!status)
   {
-    // print driver standings
-    JsonArray driverStandings = driverStandingDoc["MRData"]["StandingsTable"]["StandingsLists"][0]["DriverStandings"].as<JsonArray>();
-    int yPosition = 50;
-    int CellWidth[] = {14, 40, 35};
-    uint16_t startPoint = 16;
-    int xPosition = startPoint;
-    drawTable(xPosition - 2, yPosition - 5, 5, 3, CellWidth, 15);
-    for (int i = 0; i < 5; i++)
+    return;
+  }
+  // print driver standings
+  JsonArray driverStandings = driverStandingDoc["MRData"]["StandingsTable"]["StandingsLists"][0]["DriverStandings"].as<JsonArray>();
+  int yPosition = 50;
+  int CellWidth[] = {14, 40, 35};
+  uint16_t startPoint = 16;
+  int xPosition = startPoint;
+  drawTable(xPosition - 2, yPosition - 5, 5, 3, CellWidth, 15);
+  for (int i = 0; i < 5; i++)
+  {
+    uint16_t offset = 3;
+    uint16_t xRelativePosition = xPosition;
+    JsonObject driver = driverStandings[i];
+
+    String name = driver["Driver"]["code"].as<String>();
+    String points = driver["points"].as<String>();
+
+    drawString(xRelativePosition, yPosition, String(i + 1), LEFT, false);
+    xRelativePosition += CellWidth[0];
+
+    drawString(xRelativePosition + offset, yPosition, name, LEFT, false);
+    xRelativePosition += CellWidth[1];
+
+    drawString(xRelativePosition + offset, yPosition, points, LEFT, false);
+    yPosition += 15;
+  }
+
+  // print team standings
+  JsonArray teamsStandings = teamsStandingDoc["MRData"]["StandingsTable"]["StandingsLists"][0]["ConstructorStandings"].as<JsonArray>();
+  xPosition = CellWidth[0] + CellWidth[1] + CellWidth[2] + startPoint;
+  yPosition = 50;
+  CellWidth[0] = 95;
+  CellWidth[1] = 35;
+  drawTable(xPosition - 2, yPosition - 5, 5, 2, CellWidth, 15);
+  for (int i = 0; i < 5; i++)
+  {
+    uint16_t offset = 3;
+    uint16_t xRelativePosition = xPosition;
+    JsonObject driver = teamsStandings[i];
+
+    String name = driver["Constructor"]["name"].as<String>();
+    name.replace("F1 Team", "");
+    String points = driver["points"].as<String>();
+
+    drawString(xRelativePosition + offset, yPosition, name, LEFT, false);
+    xRelativePosition += CellWidth[0];
+
+    drawString(xRelativePosition + offset, yPosition, points, LEFT, false);
+    yPosition += 15;
+  }
+
+  // print future races
+  JsonArray races = calendarDoc["MRData"]["RaceTable"]["Races"].as<JsonArray>();
+  uint16_t index = findUpcomingDateIndex(races);
+  String raceDetails[2];
+  uint8_t ystart = 16;
+  for (int i = 0; i < 2; i++)
+  {
+    uint8_t raceNumber = index + i;
+    if (raceNumber < races.size())
     {
-      uint16_t offset = 3;
-      uint16_t xRelativePosition = xPosition;
-      JsonObject driver = driverStandings[i];
+      String nextRaces = String(races[raceNumber]["date"].as<const char *>());
+      struct tm date = StringToDate(nextRaces.c_str());
+      String month = String(date.tm_mon);
+      String day = String(date.tm_mday);
+      raceDetails[i] += day + "/" + month + " " +
+                        String(races[raceNumber]["Circuit"]["Location"]["locality"].as<const char *>()) + " (" +
+                        String(races[raceNumber]["Circuit"]["Location"]["country"].as<const char *>()) + ")";
 
-      String name = driver["Driver"]["code"].as<String>();
-      String points = driver["points"].as<String>();
-
-      drawString(xRelativePosition, yPosition, String(i + 1), LEFT, false);
-      xRelativePosition += CellWidth[0];
-
-      drawString(xRelativePosition + offset, yPosition, name, LEFT, false);
-      xRelativePosition += CellWidth[1];
-
-      drawString(xRelativePosition + offset, yPosition, points, LEFT, false);
-      yPosition += 15;
-    }
-
-    // print team standings
-    JsonArray teamsStandings = teamsStandingDoc["MRData"]["StandingsTable"]["StandingsLists"][0]["ConstructorStandings"].as<JsonArray>();
-    xPosition = CellWidth[0] + CellWidth[1] + CellWidth[2] + startPoint;
-    yPosition = 50;
-    CellWidth[0] = 95;
-    CellWidth[1] = 35;
-    drawTable(xPosition - 2, yPosition - 5, 5, 2, CellWidth, 15);
-    for (int i = 0; i < 5; i++)
-    {
-      uint16_t offset = 3;
-      uint16_t xRelativePosition = xPosition;
-      JsonObject driver = teamsStandings[i];
-
-      String name = driver["Constructor"]["name"].as<String>();
-      name.replace("F1 Team", "");
-      String points = driver["points"].as<String>();
-
-      drawString(xRelativePosition + offset, yPosition, name, LEFT, false);
-      xRelativePosition += CellWidth[0];
-
-      drawString(xRelativePosition + offset, yPosition, points, LEFT, false);
-      yPosition += 15;
-    }
-
-    // print future races
-    JsonArray races = calendarDoc["MRData"]["RaceTable"]["Races"].as<JsonArray>();
-    uint16_t index = findUpcomingDateIndex(races);
-    String raceDetails[2];
-    uint8_t ystart = 16;
-    for (int i = 0; i < 2; i++)
-    {
-      uint8_t raceNumber = index + i;
-      if (raceNumber < races.size())
-      {
-        String nextRaces = String(races[raceNumber]["date"].as<const char *>());
-        struct tm date = StringToDate(nextRaces.c_str());
-        String month = String(date.tm_mon);
-        String day = String(date.tm_mday);
-        raceDetails[i] += day + "/" + month + " " +
-                          String(races[raceNumber]["Circuit"]["Location"]["locality"].as<const char *>()) + " (" +
-                          String(races[raceNumber]["Circuit"]["Location"]["country"].as<const char *>()) + ")";
-
-        drawString(SCREEN_WIDTH / 2, ystart, raceDetails[i], CENTER, false);
-        ystart += 13;
-      }
+      drawString(SCREEN_WIDTH / 2, ystart, raceDetails[i], CENTER, false);
+      ystart += 13;
     }
   }
 }
+
 
 void drawRaceWeekPage()
 {
   JsonDocument calendarDoc;
   bool calendarIsSuccessful = sendRequest(API.at("Calendar"), calendarDoc);
+
   status = calendarIsSuccessful;
+  if (!status)
+  {
+    return;
+  }
 
   JsonArray races = calendarDoc["MRData"]["RaceTable"]["Races"].as<JsonArray>();
   uint16_t index = findUpcomingDateIndex(races);
+
+  drawSessionInfo(races, index);
+
+  String raceName = races[index]["raceName"].as<String>();
+  raceName.toUpperCase();
+  drawString(SCREEN_WIDTH / 2, 20, raceName, CENTER, false);
+}
+
+void drawSessionInfo(JsonArray &races, uint16_t index)
+{
   if (index < races.size())
   {
     const std::map<String, String> sessionsNameMap = {
@@ -257,7 +276,7 @@ void drawRaceWeekPage()
 
     JsonObject race = races[index];
 
-    int yPosition = 40;
+    int yPosition = 60;
     int xPosition = 5;
 
     for (JsonPair kv : race)
@@ -277,18 +296,23 @@ void drawRaceWeekPage()
       if (race[key].is<JsonObject>())
       {
         JsonObject session = race[key].as<JsonObject>();
-        printSession(session, sessionsNameMap, key, xPosition, yPosition);
+        printSessionInfo(session, sessionsNameMap, key, xPosition, yPosition);
       }
     }
     JsonObject session = races[index].as<JsonObject>();
-    printSession(session, sessionsNameMap, "RACE", xPosition, yPosition);
+    printSessionInfo(session, sessionsNameMap, "RACE", xPosition, yPosition);
   }
 }
 
-void printSession(JsonObject &session, const std::map<String, String> &sessionsNameMap, const char *key, int xPosition, int &yPosition)
+void printSessionInfo(JsonObject &session, const std::map<String, String> &sessionsNameMap, const char *key, int xPosition, int &yPosition)
 {
   const char *dateStr = session["date"];
   const char *timeStr = session["time"];
+
+  if (dateStr == nullptr || timeStr == nullptr)
+  {
+    return;
+  }
 
   tm date = StringToDate(dateStr);
   tm time = StringToTime(timeStr);
@@ -301,7 +325,7 @@ void printSession(JsonObject &session, const std::map<String, String> &sessionsN
   drawString(xPosition, yPosition, sessionName, LEFT, false);
   drawString(xPosition + 50, yPosition, sessionInfo, LEFT, false);
 
-  yPosition += 10;
+  yPosition += 13;
 }
 
 void drawTestPage()
