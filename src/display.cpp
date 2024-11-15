@@ -240,7 +240,6 @@ void drawHomePage()
   }
 }
 
-
 void drawRaceWeekPage()
 {
   JsonDocument calendarDoc;
@@ -255,52 +254,46 @@ void drawRaceWeekPage()
   JsonArray races = calendarDoc["MRData"]["RaceTable"]["Races"].as<JsonArray>();
   uint16_t index = findUpcomingDateIndex(races);
 
+  // draw week calendar
   drawSessionInfo(races, index);
 
+  // draw race name
   String raceName = races[index]["raceName"].as<String>();
   raceName.toUpperCase();
   drawString(SCREEN_WIDTH / 2, 20, raceName, CENTER, false);
+
+  // draw track
+  // display.drawBitmap(150, 22, , 80, 50, GxEPD_BLACK);
 }
 
 void drawSessionInfo(JsonArray &races, uint16_t index)
 {
   if (index < races.size())
   {
-    const std::map<String, String> sessionsNameMap = {
+    static const std::map<String, String> sessionsNameMap = {
         {"FirstPractice", "FP1"},
-        {"ThirdPractice", "FP3"},
         {"SecondPractice", "FP2"},
+        {"ThirdPractice", "FP3"},
         {"Qualifying", "QUALI"},
-        {"Race", "RACE"},
-        {"Sprint", "PRINT"}};
+        {"Sprint", "SPRINT"},
+        {"Race", "RACE"}};
 
     JsonObject race = races[index];
-
     int yPosition = 60;
     int xPosition = 5;
 
-    for (JsonPair kv : race)
+    // List of session keys to process
+    const char *sessionKeys[] = {"FirstPractice", "SecondPractice", "ThirdPractice", "Qualifying", "Sprint", "Race"};
+    for (const char *key : sessionKeys)
     {
-      const char *key = kv.key().c_str();
-
-      if (strcmp(key, "season") == 0 ||
-          strcmp(key, "round") == 0 ||
-          strcmp(key, "url") == 0 ||
-          strcmp(key, "raceName") == 0 ||
-          strcmp(key, "Circuit") == 0 ||
-          strcmp(key, "date") == 0 ||
-          strcmp(key, "time") == 0)
-      {
-        continue;
-      }
       if (race[key].is<JsonObject>())
       {
-        JsonObject session = race[key].as<JsonObject>();
+        JsonObject session = race[key];
         printSessionInfo(session, sessionsNameMap, key, xPosition, yPosition);
       }
     }
-    JsonObject session = races[index].as<JsonObject>();
-    printSessionInfo(session, sessionsNameMap, "RACE", xPosition, yPosition);
+    JsonObject session = race;
+    printSessionInfo(session, sessionsNameMap, "Race", xPosition, yPosition);
   }
 }
 
@@ -316,14 +309,16 @@ void printSessionInfo(JsonObject &session, const std::map<String, String> &sessi
 
   tm date = StringToDate(dateStr);
   tm time = StringToTime(timeStr);
+  LocalTime(time, date);
   String day = getDayOfWeek(date);
-  tm localtime = LocalTime(time, date);
 
   String sessionName = sessionsNameMap.count(String(key)) ? sessionsNameMap.at(String(key)) : String(key);
-  String sessionInfo = day + " " + String(localtime.tm_hour) + " " + (localtime.tm_min < 10 ? "0" : "") + String(localtime.tm_min);
+  String sessionDay = day;
+  String sessionTime = String(time.tm_hour) + " " + (time.tm_min < 10 ? "0" : "") + String(time.tm_min);
 
   drawString(xPosition, yPosition, sessionName, LEFT, false);
-  drawString(xPosition + 50, yPosition, sessionInfo, LEFT, false);
+  drawString(xPosition + 50, yPosition, sessionDay, LEFT, false);
+  drawString(xPosition + 80, yPosition, sessionTime, LEFT, false);
 
   yPosition += 13;
 }

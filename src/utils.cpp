@@ -39,17 +39,6 @@ const char *getDayOfWeek(const tm &timeinfo)
     const char *daysOfWeek[] = {"MON", "TUE", "WED", "THU", "FRI", "SAT", "SUN"};
     return daysOfWeek[timeinfo.tm_wday];
 }
-
-tm LocalTime(tm raceTime, tm raceDate)
-{
-    bool isLegalTime = isDaylightSavingTime(raceDate.tm_year + 1900, raceDate.tm_mon + 1, raceDate.tm_mday);
-    int baseHourTime = (raceTime.tm_hour + gmtOffset_sec / 3600) % 24;
-    int newHourTime = isLegalTime ? baseHourTime + daylightOffset_sec / 3600 : baseHourTime;
-    raceTime.tm_hour = newHourTime % 24;
-    mktime(&raceTime);
-    return raceTime;
-}
-
 int findUpcomingDateIndex(const JsonArray &dates)
 {
     struct tm currentTime = getTime();
@@ -66,22 +55,49 @@ int findUpcomingDateIndex(const JsonArray &dates)
     }
     return 0;
 }
+
+void LocalTime(tm &raceTime, tm &raceDate)
+{
+    bool isLegalTime = isDaylightSavingTime(raceDate.tm_year + 1900, raceDate.tm_mon + 1, raceDate.tm_mday);
+    int totalOffsetHours = gmtOffset_sec / 3600 + (isLegalTime ? daylightOffset_sec / 3600 : 0);
+
+    raceTime.tm_hour += totalOffsetHours;
+
+    while (raceTime.tm_hour >= 24)
+    {
+        raceTime.tm_hour -= 24;
+        raceTime.tm_mday += 1;
+    }
+
+    while (raceTime.tm_hour < 0)
+    {
+        raceTime.tm_hour += 24;
+        raceTime.tm_mday -= 1;
+    }
+
+}
+
 bool isDaylightSavingTime(int year, int month, int day)
 {
-    int lastSundayMarch = 31 - ((5 + year * 5 / 4) % 7);
-    int lastSundayOctober = 31 - ((2 + year * 5 / 4) % 7);
-
+    if (month < 3 || month > 10)
+    {
+        return false;
+    }
     if (month > 3 && month < 10)
     {
         return true;
     }
-    else if (month == 3 && day >= lastSundayMarch)
+
+    int lastSundayMarch = 31 - ((5 + year * 5 / 4) % 7);
+    int lastSundayOctober = 31 - ((2 + year * 5 / 4) % 7);
+
+    if (month == 3)
     {
-        return true;
+        return day >= lastSundayMarch;
     }
-    else if (month == 10 && day < lastSundayOctober)
+    if (month == 10)
     {
-        return true;
+        return day < lastSundayOctober;
     }
     return false;
 }

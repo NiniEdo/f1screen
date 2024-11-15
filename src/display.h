@@ -6,6 +6,7 @@
 #include <GxEPD2_3C.h>
 #include <Adafruit_GFX.h>
 #include <map>
+#include <set>
 #include <ArduinoJson.h>
 
 extern bool status;
