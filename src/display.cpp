@@ -4,6 +4,7 @@
 #include <GxEPD2_BW.h>
 #include "display.h"
 #include "../fonts/Formula1_Bold5pt7b.h"
+#include "imagesBitmap/racetracks.h"
 #include "network.h"
 #include "utils.h"
 
@@ -260,12 +261,19 @@ void drawRaceWeekPage()
   // draw race name
   String raceName = races[index]["raceName"].as<String>();
   raceName.toUpperCase();
-  drawString(SCREEN_WIDTH / 2, 20, raceName, CENTER, false);
+  drawString(SCREEN_WIDTH / 2, 25, raceName, CENTER, false);
 
   // draw track
-  // display.drawBitmap(150, 22, , 80, 50, GxEPD_BLACK);
+  String trackName = races[index]["Circuit"]["circuitId"].as<String>();
+  if (circuitImageMap.count(trackName) > 0)
+  {
+    display.drawInvertedBitmap(155, 40, circuitImageMap.at(trackName), 80, 80, GxEPD_BLACK);
+  }
+  else
+  {
+    display.drawRect(155, 40, 80, 80, GxEPD_BLACK);
+  }
 }
-
 void drawSessionInfo(JsonArray &races, uint16_t index)
 {
   if (index < races.size())
@@ -279,11 +287,11 @@ void drawSessionInfo(JsonArray &races, uint16_t index)
         {"Race", "RACE"}};
 
     JsonObject race = races[index];
-    int yPosition = 60;
+    int yPosition = 50;
     int xPosition = 5;
 
     // List of session keys to process
-    const char *sessionKeys[] = {"FirstPractice", "SecondPractice", "ThirdPractice", "Qualifying", "Sprint", "Race"};
+    const char *sessionKeys[] = {"FirstPractice", "SecondPractice", "ThirdPractice", "Qualifying", "Sprint"};
     for (const char *key : sessionKeys)
     {
       if (race[key].is<JsonObject>())
@@ -317,8 +325,8 @@ void printSessionInfo(JsonObject &session, const std::map<String, String> &sessi
   String sessionTime = String(time.tm_hour) + " " + (time.tm_min < 10 ? "0" : "") + String(time.tm_min);
 
   drawString(xPosition, yPosition, sessionName, LEFT, false);
-  drawString(xPosition + 50, yPosition, sessionDay, LEFT, false);
-  drawString(xPosition + 80, yPosition, sessionTime, LEFT, false);
+  drawString(xPosition + 55, yPosition, sessionDay, LEFT, false);
+  drawString(xPosition + 90, yPosition, sessionTime, LEFT, false);
 
   yPosition += 13;
 }

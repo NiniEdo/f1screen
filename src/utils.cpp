@@ -63,6 +63,7 @@ void LocalTime(tm &raceTime, tm &raceDate)
 
     raceTime.tm_hour += totalOffsetHours;
 
+    //this does not handle months and years, baybe it will in the future
     while (raceTime.tm_hour >= 24)
     {
         raceTime.tm_hour -= 24;
