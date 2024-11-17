@@ -1,6 +1,14 @@
 #include "network.h"
 #include <WiFi.h>
+#include <WiFi.h>
 #include <HTTPClient.h>
+
+
+const std::map<String, String> API = {
+    {"DriverStanding", "http://ergast.com/api/f1/current/driverStandings.json"},
+    {"TeamsStanding", "http://ergast.com/api/f1/current/constructorStandings.json"},
+    {"Calendar", "http://ergast.com/api/f1/current.json"},
+};
 
 bool sendRequest(const String &url, JsonDocument &doc)
 {

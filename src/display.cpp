@@ -3,9 +3,9 @@
 #include <cctype>
 #include <GxEPD2_BW.h>
 #include "display.h"
+#include "network.h"
 #include "../fonts/Formula1_Bold5pt7b.h"
 #include "imagesBitmap/racetracks.h"
-#include "network.h"
 #include "utils.h"
 
 #define SCREEN_WIDTH 250
@@ -27,12 +27,6 @@ const std::map<screenNameKeys, String> screenNameMap = {
     {screenNameKeys::STARTING, "STARTING"},
     {screenNameKeys::TEST, "TEST"},
     {screenNameKeys::RACEWEEK, "RACE WEEK"}};
-
-const std::map<String, String> API = {
-    {"DriverStanding", "http://ergast.com/api/f1/current/driverStandings.json"},
-    {"TeamsStanding", "http://ergast.com/api/f1/current/constructorStandings.json"},
-    {"Calendar", "http://ergast.com/api/f1/current.json"},
-};
 
 String screenName = screenNameMap.at(screenNameKeys::STARTING);
 
@@ -166,6 +160,11 @@ void drawHomePage()
   }
   // print driver standings
   JsonArray driverStandings = driverStandingDoc["MRData"]["StandingsTable"]["StandingsLists"][0]["DriverStandings"].as<JsonArray>();
+  if (driverStandings.size() == 0)
+  {
+    return;
+  }
+
   int yPosition = 50;
   int CellWidth[] = {14, 40, 35};
   uint16_t startPoint = 16;
@@ -192,6 +191,10 @@ void drawHomePage()
 
   // print team standings
   JsonArray teamsStandings = teamsStandingDoc["MRData"]["StandingsTable"]["StandingsLists"][0]["ConstructorStandings"].as<JsonArray>();
+  if (teamsStandings.size() == 0)
+  {
+    return;
+  }
   xPosition = CellWidth[0] + CellWidth[1] + CellWidth[2] + startPoint;
   yPosition = 50;
   CellWidth[0] = 95;
@@ -217,6 +220,10 @@ void drawHomePage()
   // print future races
   JsonArray races = calendarDoc["MRData"]["RaceTable"]["Races"].as<JsonArray>();
   uint16_t index = findUpcomingDateIndex(races);
+  if (index == -1)
+  {
+    return;
+  }
   String raceDetails[2];
   uint8_t ystart = 16;
   for (int i = 0; i < 2; i++)
@@ -251,7 +258,10 @@ void drawRaceWeekPage()
 
   JsonArray races = calendarDoc["MRData"]["RaceTable"]["Races"].as<JsonArray>();
   uint16_t index = findUpcomingDateIndex(races);
-
+  if (index == -1)
+  {
+    return;
+  }
   // draw week calendar
   drawSessionInfo(races, index);
 

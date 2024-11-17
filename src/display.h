@@ -5,9 +5,9 @@
 #include <GxEPD2_BW.h>
 #include <GxEPD2_3C.h>
 #include <Adafruit_GFX.h>
-#include <map>
 #include <set>
 #include <ArduinoJson.h>
+#include "network.h"
 
 extern bool status;
 
