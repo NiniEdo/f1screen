@@ -38,12 +38,10 @@ String screenName = screenNameMap.at(screenNameKeys::STARTING);
 
 void initDisplay()
 {
-  display.init(115200, true, 50, false);
+  display.init(115200, true, 2, false);
   display.setRotation(3);
   display.setFont(&Formula1_Bold5pt7b);
   display.setTextColor(GxEPD_BLACK);
-  status = false;
-  drawScreen(drawTopBar, nullptr);
 }
 
 void drawTable(int x, int y, int rows, int cols, int cellWidth[], int cellHeight)
@@ -58,7 +56,6 @@ void drawTable(int x, int y, int rows, int cols, int cellWidth[], int cellHeight
     }
     display.drawLine(x, y + i * cellHeight, x + totalWidth, y + i * cellHeight, GxEPD_BLACK);
   }
-
   // vertical lines
   for (int j = 0; j <= cols; j++)
   {
@@ -83,12 +80,12 @@ void drawScreen(void (*drawPage)(), void (*drawTopBar)())
   {
     if (drawPage != nullptr)
     {
-      display.drawRect(0, TOP_BAR_HEIGHT + 1, SCREEN_WIDTH, SCREEN_HEIGHT - TOP_BAR_HEIGHT, GxEPD_WHITE); // clears the page
+      display.fillRect(0, TOP_BAR_HEIGHT + 1, SCREEN_WIDTH, SCREEN_HEIGHT - TOP_BAR_HEIGHT, GxEPD_WHITE); // clears the page
       drawPage();
     }
     if (drawTopBar != nullptr)
     {
-      display.drawRect(0, 0, SCREEN_WIDTH, TOP_BAR_HEIGHT, GxEPD_WHITE); // clears the top bar
+      display.fillRect(0, 0, SCREEN_WIDTH, TOP_BAR_HEIGHT, GxEPD_WHITE); // clears the top bar
       drawTopBar();
     }
   } while (display.nextPage());
@@ -288,7 +285,7 @@ void drawSessionInfo(JsonArray &races, uint16_t index)
 
     JsonObject race = races[index];
     int yPosition = 50;
-    int xPosition = 5;
+    int xPosition = 10;
 
     // List of session keys to process
     const char *sessionKeys[] = {"FirstPractice", "SecondPractice", "ThirdPractice", "Qualifying", "Sprint"};
@@ -340,4 +337,8 @@ void drawTestPage()
 void setScreenName(screenNameKeys key)
 {
   screenName = screenNameMap.at(key);
+}
+void hibernateDisplay()
+{
+  display.hibernate();
 }

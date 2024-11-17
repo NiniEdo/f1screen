@@ -41,5 +41,6 @@ void setScreenName(screenNameKeys key);
 void setScreenName(const String &name);
 void drawTestPage();
 void clearPage();
+void hibernateDisplay();
 
 #endif // DISPLAY_H

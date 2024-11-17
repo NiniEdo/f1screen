@@ -1,4 +1,5 @@
 #include <time.h>
+#include <display.h>
 #include <WiFi.h>
 #include <stdio.h>
 #include <ArduinoJson.h>
@@ -63,7 +64,7 @@ void LocalTime(tm &raceTime, tm &raceDate)
 
     raceTime.tm_hour += totalOffsetHours;
 
-    //this does not handle months and years, baybe it will in the future
+    // this does not handle months and years, baybe it will in the future
     while (raceTime.tm_hour >= 24)
     {
         raceTime.tm_hour -= 24;
@@ -75,7 +76,6 @@ void LocalTime(tm &raceTime, tm &raceDate)
         raceTime.tm_hour += 24;
         raceTime.tm_mday -= 1;
     }
-
 }
 
 bool isDaylightSavingTime(int year, int month, int day)
@@ -101,4 +101,12 @@ bool isDaylightSavingTime(int year, int month, int day)
         return day < lastSundayOctober;
     }
     return false;
+}
+
+void enterDeepSleep(int sleepSeconds)
+{
+    Serial.println("Entering deep sleep...");
+    hibernateDisplay();
+    esp_sleep_enable_timer_wakeup(sleepSeconds * 1000000);
+    esp_deep_sleep_start();
 }

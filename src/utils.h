@@ -1,4 +1,4 @@
-tm getLocalTime();
+tm getTime();
 tm StringToDate(const char *date);
 int findUpcomingDateIndex(const JsonArray &dates);
 const char* getDayOfWeek(const tm &timeinfo);
