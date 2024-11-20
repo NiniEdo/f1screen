@@ -6,4 +6,3 @@ tm StringToTime(const char *timeStr);
 void LocalTime(tm &raceTime, tm &raceDate);
 bool isDaylightSavingTime(int year, int month, int day);
 int getScreenIndex();
-int calculateDateDifference(const tm &date1, const tm &date2);

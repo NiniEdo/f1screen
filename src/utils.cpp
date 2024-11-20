@@ -38,9 +38,10 @@ tm StringToTime(const char *timeStr)
 
 const char *getDayOfWeek(const tm &timeinfo)
 {
-    const char *daysOfWeek[] = {"MON", "TUE", "WED", "THU", "FRI", "SAT", "SUN"};
+    const char *daysOfWeek[] = {"SUN", "MON", "TUE", "WED", "THU", "FRI", "SAT"};
     return daysOfWeek[timeinfo.tm_wday];
 }
+
 int findUpcomingDateIndex(const JsonArray &dates)
 {
     struct tm currentTime = getTime();
@@ -116,21 +117,34 @@ int getScreenIndex()
 {
     JsonDocument calendarDoc;
     bool calendarIsSuccessful = sendRequest(API.at("Calendar"), calendarDoc);
+
     status = calendarIsSuccessful;
     if (!status)
     {
         return -1;
     }
+
     JsonArray races = calendarDoc["MRData"]["RaceTable"]["Races"].as<JsonArray>();
     uint16_t index = findUpcomingDateIndex(races);
+
     if (index == -1)
     {
         return -1;
     }
+
     tm nextRaceDate = StringToDate(races[index]["date"].as<const char *>());
     tm currentTime = getTime();
-    int daysToNextRace = calculateDateDifference(currentTime, nextRaceDate);
-    if ((daysToNextRace < 6 && currentTime.tm_wday > 0) || (daysToNextRace < 6 && nextRaceDate.tm_mday == currentTime.tm_mday))
+    std::map<uint8_t, uint8_t> daysOfWeekMap = {
+        {0, 6}, {1, 0}, {2, 1}, {3, 2}, {4, 3}, {5, 4}, {6, 5}};
+    uint16_t yearDayOfRace = nextRaceDate.tm_yday;
+    uint8_t weekDayOfRace = nextRaceDate.tm_wday;
+    uint16_t yearDayOfMondayOfRaceWeek = yearDayOfRace - daysOfWeekMap[weekDayOfRace];    
+    if (currentTime.tm_yday < yearDayOfMondayOfRaceWeek)
+    {
+        // return home screen
+        return 1;
+    }
+    else if (currentTime.tm_yday >= yearDayOfMondayOfRaceWeek && currentTime.tm_yday <= yearDayOfRace)
     {
         // return raceweek screen
         return 0;
@@ -140,20 +154,4 @@ int getScreenIndex()
         // return home screen
         return 1;
     }
-}
-
-int calculateDateDifference(const tm &date1, const tm &date2)
-{
-    tm normalizedDate1 = date1;
-    tm normalizedDate2 = date2;
-    normalizedDate1.tm_hour = 0;
-    normalizedDate1.tm_min = 0;
-    normalizedDate1.tm_sec = 0;
-    normalizedDate2.tm_hour = 0;
-    normalizedDate2.tm_min = 0;
-    normalizedDate2.tm_sec = 0;
-    time_t time1 = mktime(&normalizedDate1);
-    time_t time2 = mktime(&normalizedDate2);
-    double difference = difftime(time2, time1);
-    return difference / (60 * 60 * 24);
 }

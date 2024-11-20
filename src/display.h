@@ -24,6 +24,7 @@ enum class screenNameKeys
   STARTING,
   TEST,
   RACEWEEK,
+  ERROR
 };
 
 void initDisplay();
@@ -39,7 +40,7 @@ void printSessionInfo(JsonObject &session, const std::map<String, String> &sessi
 void drawSessionInfo(JsonArray &races, uint16_t index);
 void setScreenName(screenNameKeys key);
 void setScreenName(const String &name);
-void drawTestPage();
+void drawErrorPage();
 void clearPage();
 void hibernateDisplay();
 

@@ -25,7 +25,7 @@ GxEPD2_BW<GxEPD2_213_BN, GxEPD2_213_BN::HEIGHT> display(GxEPD2_213_BN(EPD_CS, EP
 const std::map<screenNameKeys, String> screenNameMap = {
     {screenNameKeys::HOME, "HOME"},
     {screenNameKeys::STARTING, "STARTING"},
-    {screenNameKeys::TEST, "TEST"},
+    {screenNameKeys::ERROR, "ERROR"},
     {screenNameKeys::RACEWEEK, "RACE WEEK"}};
 
 String screenName = screenNameMap.at(screenNameKeys::STARTING);
@@ -338,10 +338,10 @@ void printSessionInfo(JsonObject &session, const std::map<String, String> &sessi
   yPosition += 13;
 }
 
-void drawTestPage()
+void drawErrorPage()
 {
   display.setCursor(20, 20);
-  display.print("test");
+  drawString(SCREEN_WIDTH/2, 50, "ERROR", CENTER, false);
 }
 
 void setScreenName(screenNameKeys key)

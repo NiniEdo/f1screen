@@ -29,7 +29,6 @@ bool sendRequest(const String &url, JsonDocument &doc)
     http.end();
     return false;
   }
-
   DeserializationError error = deserializeJson(doc, payload);
   if (error || doc.isNull())
   {

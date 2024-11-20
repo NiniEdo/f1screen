@@ -24,8 +24,8 @@ void setup()
     delay(20000);
     break;
   default:
-    setScreenName(screenNameKeys::TEST);
-    drawScreen(drawTestPage, drawTopBar);
+    setScreenName(screenNameKeys::ERROR);
+    drawScreen(drawErrorPage, drawTopBar);
     break;
   }
 }
