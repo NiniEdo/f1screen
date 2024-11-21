@@ -17,12 +17,18 @@ An Arduino compatible device (e.g. ESP32)
 An e-paper compatible display (for example, GxEPD2_213_BN)
 
 ## Installation:
-Clone this repository, install dependencies, configure WiFi credentials in the wifi_credentials.h file, upload the project to your device
+Clone this repository, install dependencies, configure WiFi credentials in the wifi_credentials.h file and set your timezone in the utils.cpp file, upload the project to your device
 
 ## Usage
-Turn on the device.
 The device will connect to the configured WiFi network and begin downloading Formula 1 race data.
 Information on practice sessions, qualifying and races will be stored on the e-paper display.
+Currently the display has two screens: 
+1) During the race week it shows the track layout and the dates and times for every session.![raceweek](https://github.com/user-attachments/assets/c99f0bd4-12a9-43be-9d6e-e3e1c6df9bae)
+
+2) During non-raceweek days it shows the next two races dates and the championship leaderboard
+![home](https://github.com/user-attachments/assets/3e29eb3e-f02d-4ad4-93ca-9d211663c732)
+
+The esp32 hibernates after the data is displayes and updates every day at midnight
 
 ## BOM: 
 
