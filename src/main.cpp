@@ -11,7 +11,6 @@ void setup()
   initDisplay();
   status = connectToWiFi(ssid, password);
   int screen = getScreenIndex();
-  screen = 1;
   switch (screen)
   {
   case 0:
