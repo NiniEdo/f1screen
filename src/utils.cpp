@@ -105,14 +105,6 @@ bool isDaylightSavingTime(int year, int month, int day)
     return false;
 }
 
-void enterDeepSleep(int sleepSeconds)
-{
-    Serial.println("Entering deep sleep...");
-    hibernateDisplay();
-    esp_sleep_enable_timer_wakeup(sleepSeconds * 1000000);
-    esp_deep_sleep_start();
-}
-
 int getScreenIndex()
 {
     JsonDocument calendarDoc;
@@ -154,4 +146,19 @@ int getScreenIndex()
         // return home screen
         return 1;
     }
+}
+void enterDeepSleep(int sleepSeconds)
+{
+    Serial.println("Entering deep sleep...");
+    hibernateDisplay();
+    esp_sleep_disable_wakeup_source(ESP_SLEEP_WAKEUP_ALL);
+    esp_sleep_enable_timer_wakeup(sleepSeconds * 1000000);
+    esp_deep_sleep_start();
+}
+int secondsUntilMidnight(){
+    tm currentTime = getTime();
+    uint64_t secondsUntilMidnight = 86400 - (currentTime.tm_hour * 3600 + currentTime.tm_min * 60 + currentTime.tm_sec);
+    Serial.print("Seconds until midnight: ");
+    Serial.print(secondsUntilMidnight);
+    return secondsUntilMidnight;
 }

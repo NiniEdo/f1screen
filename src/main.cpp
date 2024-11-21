@@ -11,23 +11,23 @@ void setup()
   initDisplay();
   status = connectToWiFi(ssid, password);
   int screen = getScreenIndex();
+  screen = 1;
   switch (screen)
   {
   case 0:
     setScreenName(screenNameKeys::RACEWEEK);
     drawScreen(drawRaceWeekPage, drawTopBar);
-    delay(20000);
     break;
   case 1:
     setScreenName(screenNameKeys::HOME);
     drawScreen(drawHomePage, drawTopBar);
-    delay(20000);
     break;
   default:
     setScreenName(screenNameKeys::ERROR);
     drawScreen(drawErrorPage, drawTopBar);
     break;
-  }
+  }  
+  enterDeepSleep(secondsUntilMidnight());
 }
 
 void loop()

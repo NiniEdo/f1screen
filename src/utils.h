@@ -6,3 +6,5 @@ tm StringToTime(const char *timeStr);
 void LocalTime(tm &raceTime, tm &raceDate);
 bool isDaylightSavingTime(int year, int month, int day);
 int getScreenIndex();
+void enterDeepSleep(int sleepSeconds);
+int secondsUntilMidnight();

@@ -219,6 +219,10 @@ void drawHomePage()
 
   // print future races
   JsonArray races = calendarDoc["MRData"]["RaceTable"]["Races"].as<JsonArray>();
+  if (races.size() == 0)
+  {
+    return;
+  }
   uint16_t index = findUpcomingDateIndex(races);
   if (index == -1)
   {
@@ -257,6 +261,10 @@ void drawRaceWeekPage()
   }
 
   JsonArray races = calendarDoc["MRData"]["RaceTable"]["Races"].as<JsonArray>();
+  if (races.size() == 0)
+  {
+    return;
+  }
   uint16_t index = findUpcomingDateIndex(races);
   if (index == -1)
   {
@@ -341,7 +349,7 @@ void printSessionInfo(JsonObject &session, const std::map<String, String> &sessi
 void drawErrorPage()
 {
   display.setCursor(20, 20);
-  drawString(SCREEN_WIDTH/2, 50, "ERROR", CENTER, false);
+  drawString(SCREEN_WIDTH / 2, 50, "ERROR", CENTER, false);
 }
 
 void setScreenName(screenNameKeys key)
