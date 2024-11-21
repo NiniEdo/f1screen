@@ -27,7 +27,7 @@ void setup()
     drawScreen(drawErrorPage, drawTopBar);
     break;
   }  
-  enterDeepSleep(secondsUntilMidnight());
+  enterDeepSleep(secondsUntilMidnight()+60); // time to midnight + 60 seconds of margin
 }
 
 void loop()
