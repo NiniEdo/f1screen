@@ -289,6 +289,7 @@ void drawRaceWeekPage()
     display.drawRect(155, 40, 80, 80, GxEPD_BLACK);
   }
 }
+
 void drawSessionInfo(JsonArray &races, uint16_t index)
 {
   if (index < races.size())
