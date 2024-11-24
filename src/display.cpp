@@ -223,7 +223,7 @@ void drawHomePage()
   {
     return;
   }
-  uint16_t index = findUpcomingDateIndex(races);
+  int index = findUpcomingDateIndex(races);
   if (index == -1)
   {
     return;
@@ -265,7 +265,7 @@ void drawRaceWeekPage()
   {
     return;
   }
-  uint16_t index = findUpcomingDateIndex(races);
+  int index = findUpcomingDateIndex(races);
   if (index == -1)
   {
     return;
